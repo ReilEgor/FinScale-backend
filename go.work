@@ -2,4 +2,5 @@ go 1.25.0
 use (
     ./services/AuthValidatorService
     ./services/UserService
+    ./services/CurrencyService
 )

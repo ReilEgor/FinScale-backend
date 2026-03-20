@@ -10,7 +10,7 @@ type ConvertCurrencyRequest struct {
 
 type CurrencyUseCase interface {
 	ConvertCurrency(ctx context.Context, from string, to string, amount float64) (float64, error)
-	SaveCurrency(ctx context.Context, from string, to string, amount float64) error
+	SaveCurrency(ctx context.Context, from string, to string, rate float64) error
 }
 
 type CurrencyRepository interface {

@@ -109,5 +109,5 @@ func (h *Handler) SyncUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"status": "synced"})
+	c.JSON(200, user)
 }

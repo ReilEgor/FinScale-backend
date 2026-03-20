@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
 	config "github.com/ReilEgor/FinScale-backend/CurrencyService/internal/config"
 	env "github.com/caarlos0/env/v11"
@@ -20,4 +23,29 @@ func main() {
 		)
 		os.Exit(1)
 	}
+	app, cleanup, err := InitializeApp(
+		cfg.RedisHost, cfg.RedisPort, cfg.RedisPassword, 0, cfg.CompareFinAPIURL, cfg.CompareFinAPIKey,
+	)
+	if err != nil {
+		logger.Error("failed to initialize app", slog.Any("error", err))
+		os.Exit(1)
+	}
+	defer cleanup()
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		port := os.Getenv("HTTP_PORT")
+		if port == "" {
+			port = "8080"
+		}
+		if err := app.Server.Run(":" + port); err != nil {
+			logger.Error("failed to start server", slog.Any("error", err))
+			os.Exit(1)
+		}
+	}()
+
+	<-ctx.Done()
+	logger.Info("shutting down gracefully")
 }
