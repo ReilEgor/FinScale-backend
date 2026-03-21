@@ -3,4 +3,5 @@ use (
     ./services/AuthValidatorService
     ./services/UserService
     ./services/CurrencyService
+    ./services/TransactionService
 )

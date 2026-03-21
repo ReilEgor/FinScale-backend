@@ -62,8 +62,11 @@ func (u *CurrencyUseCase) SaveCurrency(ctx context.Context, from string, to stri
 }
 
 func (u *CurrencyUseCase) getRateFromCryptoCompare(ctx context.Context, from, to string) (float64, error) {
-	url := fmt.Sprintf("https://min-api.cryptocompare.com/data/price?fsym=%s&tsyms=%s",
-		strings.ToUpper(from), strings.ToUpper(to))
+	url := fmt.Sprintf("%s/data/price?fsym=%s&tsyms=%s",
+		u.CoinGeckoAPIURL,
+		strings.ToUpper(from),
+		strings.ToUpper(to),
+	)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
