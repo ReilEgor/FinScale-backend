@@ -1,6 +1,10 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"io"
+	"time"
+)
 
 type Transaction struct {
 	UserID          string    `json:"user_id" db:"user_id"`
@@ -13,9 +17,15 @@ type Transaction struct {
 }
 
 type TransactionUseCase interface {
-	RecordTransaction(transaction Transaction) error
+	RecordTransaction(ctx context.Context, transaction Transaction) error
+	RecordReceipt(ctx context.Context, openedFile io.Reader, fileName string) (string, error)
 }
 
 type TransactionRepository interface {
-	SaveTransaction(transaction Transaction) error
+	SaveTransaction(ctx context.Context, transaction Transaction) error
+}
+
+type FileStorage interface {
+	UploadReceipt(ctx context.Context, fileName string, content io.Reader) (string, error)
+	GetPresignedURL(ctx context.Context, fileKey string) (string, error)
 }

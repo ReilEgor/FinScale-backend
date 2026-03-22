@@ -9,7 +9,7 @@ EOSQL
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "users_db" <<-EOSQL
     CREATE TABLE users (
-        id UUID PRIMARY KEY, -- Это будет ID из Keycloak
+        id UUID PRIMARY KEY,
         username VARCHAR(255),
         email VARCHAR(255) NOT NULL UNIQUE,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP

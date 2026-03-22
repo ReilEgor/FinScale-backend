@@ -24,7 +24,7 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 }
 
 const createUserQuery = `
-	INSERT INTO users (keycloak_id, username, email)
+	INSERT INTO users (id, username, email)
 	VALUES ($1, $2, $3) RETURNING id;
 `
 
@@ -39,13 +39,12 @@ func (r *UserRepository) CreateUser(ctx context.Context, keycloak_id, name, emai
 }
 
 const getUserQuery = `
-	SELECT id, keycloak_id, username, email, created_at FROM users WHERE keycloak_id = $1
+	SELECT id, username, email, created_at FROM users WHERE id = $1
 `
 
 func (r *UserRepository) GetUser(ctx context.Context, keycloak_id string) (*domain.User, error) {
 	user := &domain.User{}
 	err := r.db.QueryRow(ctx, getUserQuery, keycloak_id).Scan(
-		&user.ID,
 		&user.KeycloakID,
 		&user.Username,
 		&user.Email,
@@ -65,7 +64,7 @@ const updateUserQuery = `
     UPDATE users 
     SET username = $2, 
         email = $3 
-    WHERE keycloak_id = $1
+    WHERE id = $1
     RETURNING id;
 `
 

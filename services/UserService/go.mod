@@ -4,8 +4,8 @@ go 1.25.0
 
 require (
 	github.com/caarlos0/env/v11 v11.4.0
-	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.12.0
+	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.7.0
 	github.com/jackc/pgx/v5 v5.8.0
 )

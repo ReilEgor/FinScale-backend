@@ -11,6 +11,7 @@ import (
 	"github.com/ReilEgor/FinScale-backend/TransactionService/internal/config"
 	"github.com/ReilEgor/FinScale-backend/TransactionService/internal/domain"
 	"github.com/ReilEgor/FinScale-backend/TransactionService/internal/repository/postgres"
+	"github.com/ReilEgor/FinScale-backend/TransactionService/internal/storage/aws"
 	"github.com/ReilEgor/FinScale-backend/TransactionService/internal/transport/rest"
 	"github.com/ReilEgor/FinScale-backend/TransactionService/internal/transport/rest/handlers"
 	"github.com/ReilEgor/FinScale-backend/TransactionService/internal/usecase"
@@ -19,13 +20,15 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeApp(ctx context.Context, dsn config.DSN) (*App, func(), error) {
+func InitializeApp(ctx context.Context, dsn config.DSN, region config.AWSRegionType, accessKeyID config.AWSAccessKeyIDType, secretAccessKey config.AWSSecretAccessKeyType, bucket config.AWSBucketType) (*App, func(), error) {
 	pool, cleanup, err := postgres.NewPostgresRepository(ctx, dsn)
 	if err != nil {
 		return nil, nil, err
 	}
 	transactionRepository := postgres.NewTransactionRepository(pool)
-	transactionUseCase := usecase.NewTransactionUseCase(transactionRepository)
+	client := aws.NewS3Client(region, accessKeyID, secretAccessKey)
+	fileStorage := aws.NewReceiptStorage(client, bucket)
+	transactionUseCase := usecase.NewTransactionUseCase(transactionRepository, fileStorage)
 	ginServer := rest.NewGinServer(transactionUseCase)
 	app := &App{
 		Logic:  transactionUseCase,
@@ -43,6 +46,8 @@ var UseCaseSet = wire.NewSet(usecase.NewTransactionUseCase, wire.Bind(new(domain
 var RepositorySet = wire.NewSet(postgres.NewPostgresRepository, postgres.NewTransactionRepository, wire.Bind(new(domain.TransactionRepository), new(*postgres.TransactionRepository)))
 
 var RestSet = wire.NewSet(rest.NewGinServer, handlers.NewHandler)
+
+var StorageSet = wire.NewSet(aws.NewS3Client, aws.NewReceiptStorage)
 
 type App struct {
 	Logic  domain.TransactionUseCase

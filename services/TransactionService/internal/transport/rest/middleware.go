@@ -10,6 +10,7 @@ import (
 func SetupMiddleware(router *gin.Engine, logger *slog.Logger) {
 	router.Use(gin.Recovery())
 	router.Use(slogMiddleware(logger))
+
 }
 
 func slogMiddleware(logger *slog.Logger) gin.HandlerFunc {

@@ -25,7 +25,7 @@ func main() {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	app, cleanup, err := InitializeApp(ctx, cfg.DSN)
+	app, cleanup, err := InitializeApp(ctx, cfg.DSN, cfg.AWS.Region, cfg.AWS.AccessKeyID, cfg.AWS.SecretAccessKey, cfg.AWS.Bucket)
 	if err != nil {
 		logger.Error("failed to initialize app",
 			slog.Any("error", err),
