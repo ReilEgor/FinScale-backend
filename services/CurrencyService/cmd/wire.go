@@ -4,6 +4,7 @@
 package main
 
 import (
+	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/api"
 	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/config"
 	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/domain"
 	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/repository/redis"
@@ -11,6 +12,11 @@ import (
 	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/transport/rest/handlers"
 	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/usecase"
 	"github.com/google/wire"
+)
+
+var APISet = wire.NewSet(
+	api.NewCryptoCompare,
+	wire.Bind(new(domain.CurrencyFetcher), new(*api.CryptoCompare)),
 )
 
 var UsecaseSet = wire.NewSet(
@@ -43,6 +49,7 @@ func InitializeApp(
 	coinGeckoAPIKeyType config.CompareFinAPIKeyType,
 ) (*App, func(), error) {
 	wire.Build(
+		APISet,
 		RedisSet,
 		UsecaseSet,
 		RestSet,

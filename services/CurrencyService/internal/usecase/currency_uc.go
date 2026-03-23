@@ -2,30 +2,25 @@ package usecase
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
-	"strings"
 
 	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/config"
 	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/domain"
 )
 
 type CurrencyUseCase struct {
-	logger          *slog.Logger
-	repo            domain.CurrencyRepository
-	CoinGeckoAPIURL config.CompareFinAPIURLType
-	CoinGeckoAPIKey config.CompareFinAPIKeyType
+	logger  *slog.Logger
+	repo    domain.CurrencyRepository
+	fetcher domain.CurrencyFetcher
 }
 
-func NewCurrencyUseCase(repo domain.CurrencyRepository, compareFinAPIURL config.CompareFinAPIURLType, compareFinAPIKey config.CompareFinAPIKeyType) *CurrencyUseCase {
+func NewCurrencyUseCase(repo domain.CurrencyRepository, fetcher domain.CurrencyFetcher, compareFinAPIURL config.CompareFinAPIURLType, compareFinAPIKey config.CompareFinAPIKeyType) *CurrencyUseCase {
 	return &CurrencyUseCase{
-		logger:          slog.With(slog.String("useCase", "currencyUseCase")),
-		repo:            repo,
-		CoinGeckoAPIURL: compareFinAPIURL,
-		CoinGeckoAPIKey: compareFinAPIKey,
+		logger:  slog.With(slog.String("useCase", "currencyUseCase")),
+		repo:    repo,
+		fetcher: fetcher,
 	}
 }
 
@@ -35,11 +30,14 @@ func (u *CurrencyUseCase) ConvertCurrency(ctx context.Context, from string, to s
 		if errors.Is(err, domain.ErrCurrencyRateNotFound) {
 			u.logger.Warn("Cache miss, fetching from external API", "from", from, "to", to)
 
-			rate, err = u.getRateFromCryptoCompare(ctx, from, to)
+			rate, err = u.fetcher.GetRateFromCryptoCompare(ctx, from, to)
 			if err != nil {
-				return 0, fmt.Errorf("failed to fetch from external API: %w", err)
+				return 0, fmt.Errorf("%w: %w", domain.ErrFetchFromExternalAPI, err)
 			}
-			_ = u.repo.SaveCurrency(ctx, from, to, rate)
+			err = u.repo.SaveCurrency(ctx, from, to, rate)
+			if err != nil {
+				u.logger.Error("Failed to save currency rate to repository", "error", err)
+			}
 		} else {
 			return 0, err
 		}
@@ -59,37 +57,4 @@ func (u *CurrencyUseCase) ConvertCurrency(ctx context.Context, from string, to s
 
 func (u *CurrencyUseCase) SaveCurrency(ctx context.Context, from string, to string, rate float64) error {
 	return u.repo.SaveCurrency(ctx, from, to, rate)
-}
-
-func (u *CurrencyUseCase) getRateFromCryptoCompare(ctx context.Context, from, to string) (float64, error) {
-	url := fmt.Sprintf("%s/data/price?fsym=%s&tsyms=%s",
-		u.CoinGeckoAPIURL,
-		strings.ToUpper(from),
-		strings.ToUpper(to),
-	)
-
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		return 0, err
-	}
-
-	req.Header.Set("Authorization", "Apikey "+string(u.CoinGeckoAPIKey))
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	var result map[string]float64
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return 0, err
-	}
-
-	rate, ok := result[strings.ToUpper(to)]
-	if !ok {
-		return 0, fmt.Errorf("rate not found for %s", to)
-	}
-
-	return rate, nil
 }

@@ -7,6 +7,7 @@
 package main
 
 import (
+	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/api"
 	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/config"
 	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/domain"
 	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/repository/redis"
@@ -24,7 +25,8 @@ func InitializeApp(redisHost config.RedisHostType, redisPort config.RedisPortTyp
 		return nil, nil, err
 	}
 	currencyRepository := redis.NewCurrencyRepository(client)
-	currencyUseCase := usecase.NewCurrencyUseCase(currencyRepository, coinGeckoAPIURL, coinGeckoAPIKeyType)
+	cryptoCompare := api.NewCryptoCompare(coinGeckoAPIURL, coinGeckoAPIKeyType)
+	currencyUseCase := usecase.NewCurrencyUseCase(currencyRepository, cryptoCompare, coinGeckoAPIURL, coinGeckoAPIKeyType)
 	ginServer := rest.NewGinServer(currencyUseCase)
 	app := &App{
 		Logic:  currencyUseCase,
@@ -35,6 +37,8 @@ func InitializeApp(redisHost config.RedisHostType, redisPort config.RedisPortTyp
 }
 
 // wire.go:
+
+var APISet = wire.NewSet(api.NewCryptoCompare, wire.Bind(new(domain.CurrencyFetcher), new(*api.CryptoCompare)))
 
 var UsecaseSet = wire.NewSet(usecase.NewCurrencyUseCase, wire.Bind(new(domain.CurrencyUseCase), new(*usecase.CurrencyUseCase)))
 
