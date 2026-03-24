@@ -56,5 +56,21 @@ func (u *CurrencyUseCase) ConvertCurrency(ctx context.Context, from string, to s
 }
 
 func (u *CurrencyUseCase) SaveCurrency(ctx context.Context, from string, to string, rate float64) error {
-	return u.repo.SaveCurrency(ctx, from, to, rate)
+	if err := u.repo.SaveCurrency(ctx, from, to, rate); err != nil {
+		u.logger.Error("failed to save currency rate",
+			"from", from,
+			"to", to,
+			"rate", rate,
+			"error", err,
+		)
+		return fmt.Errorf("%w: %w", domain.ErrSaveCurrencyRate, err)
+	}
+
+	u.logger.Debug("currency rate saved successfully",
+		"from", from,
+		"to", to,
+		"rate", rate,
+	)
+
+	return nil
 }

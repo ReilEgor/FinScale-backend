@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 
 	"testing"
 
@@ -67,10 +68,50 @@ func Test_UseCase_ConvertCurrency(t *testing.T) {
 	}
 }
 func Test_UseCase_SaveCurrency(t *testing.T) {
+	tests := []struct {
+		name      string
+		from      string
+		to        string
+		rate      float64
+		mockSetup func(repo *mocks.CurrencyRepository)
+		wantErr   error
+	}{
+		{
+			name: "success: rate saved",
+			from: "USD",
+			to:   "RUB",
+			rate: 85.0,
+			mockSetup: func(repo *mocks.CurrencyRepository) {
+				repo.On("SaveCurrency", mock.Anything, "USD", "RUB", 85.0).Return(nil).Once()
+			},
+			wantErr: nil,
+		},
+		{
+			name: "error: repo returns error",
+			from: "USD",
+			to:   "RUB",
+			rate: 85.0,
+			mockSetup: func(repo *mocks.CurrencyRepository) {
+				repo.On("SaveCurrency", mock.Anything, "USD", "RUB", 85.0).Return(errors.New("db error")).Once()
+			},
+			wantErr: domain.ErrSaveCurrencyRate,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repositoryMock := mocks.NewCurrencyRepository(t)
+			fetcherMock := mocks.NewCurrencyFetcher(t)
+			tt.mockSetup(repositoryMock)
+			uc := newTestUseCase(t, repositoryMock, fetcherMock)
+			err := uc.SaveCurrency(context.Background(), tt.from, tt.to, tt.rate)
 
-}
-func Test_UseCase_GetRateFromCryptoCompare(t *testing.T) {
-
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
 
 func newTestUseCase(t *testing.T, repo domain.CurrencyRepository, fetcher domain.CurrencyFetcher) *CurrencyUseCase {

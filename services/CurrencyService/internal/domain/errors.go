@@ -9,4 +9,7 @@ var (
 
 	ErrFetchFromExternalAPI = errors.New("failed to fetch from external API")
 	ErrRateNotFound         = errors.New("rate not found for currency")
+
+	ErrSaveCurrencyRate = errors.New("save currency rate")
+	ErrInvalidResponse  = errors.New("invalid response")
 )
