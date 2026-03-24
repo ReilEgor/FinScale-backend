@@ -9,6 +9,7 @@ type (
 	CompareFinAPIKeyType string
 )
 type Config struct {
+	HTTPPort         string               `env:"HTTP_PORT" envDefault:"8080"`
 	RedisHost        RedisHostType        `env:"REDIS_HOST" envDefault:"redis"`
 	RedisPort        RedisPortType        `env:"REDIS_PORT" envDefault:"6379"`
 	RedisPassword    RedisPasswordType    `env:"REDIS_PASSWORD" envDefault:"redis_password"`

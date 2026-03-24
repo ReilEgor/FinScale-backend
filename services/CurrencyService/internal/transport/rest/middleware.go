@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"log/slog"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 func SetupMiddleware(router *gin.Engine, logger *slog.Logger) {
 	router.Use(gin.Recovery())
 	router.Use(slogMiddleware(logger))
+	router.Use(Timeout(5 * time.Second))
 }
 
 func slogMiddleware(logger *slog.Logger) gin.HandlerFunc {
@@ -26,5 +28,14 @@ func slogMiddleware(logger *slog.Logger) gin.HandlerFunc {
 			slog.Duration("duration", time.Since(start)),
 			slog.String("ip", c.ClientIP()),
 		)
+	}
+}
+func Timeout(timeout time.Duration) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
+		defer cancel()
+
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
 	}
 }

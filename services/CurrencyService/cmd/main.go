@@ -35,17 +35,19 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	errCh := make(chan error, 1)
 	go func() {
-		port := os.Getenv("HTTP_PORT")
-		if port == "" {
-			port = "8080"
-		}
-		if err := app.Server.Run(":" + port); err != nil {
-			logger.Error("failed to start server", slog.Any("error", err))
-			os.Exit(1)
-		}
+		errCh <- app.Server.Run(ctx, ":"+cfg.HTTPPort)
 	}()
 
-	<-ctx.Done()
-	logger.Info("shutting down gracefully")
+	select {
+	case <-ctx.Done():
+		logger.Info("shutting down gracefully")
+		if err := <-errCh; err != nil {
+			logger.Error("server shutdown error", slog.Any("error", err))
+		}
+		logger.Info("server stopped")
+	case err := <-errCh:
+		logger.Error("server stopped unexpectedly", slog.Any("error", err))
+	}
 }

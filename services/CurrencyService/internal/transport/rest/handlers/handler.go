@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"log/slog"
+	"net/http"
 
 	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/domain"
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,10 @@ func NewHandler(uc domain.CurrencyUseCase) *Handler {
 }
 
 func (h *Handler) InitRoutes(router *gin.Engine) {
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+
 	api := router.Group("/api/v1")
 	{
 		currency := api.Group("/currency")
