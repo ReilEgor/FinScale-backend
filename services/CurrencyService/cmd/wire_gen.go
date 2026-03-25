@@ -27,7 +27,7 @@ func InitializeApp(redisHost config.RedisHostType, redisPort config.RedisPortTyp
 	currencyRepository := redis.NewCurrencyRepository(client)
 	cryptoCompare := api.NewCryptoCompare(coinGeckoAPIURL, coinGeckoAPIKeyType)
 	currencyUseCase := usecase.NewCurrencyUseCase(currencyRepository, cryptoCompare, coinGeckoAPIURL, coinGeckoAPIKeyType)
-	ginServer := rest.NewGinServer(currencyUseCase)
+	ginServer := rest.NewGinServer(currencyUseCase, client)
 	app := &App{
 		Logic:  currencyUseCase,
 		Server: ginServer,

@@ -8,8 +8,10 @@ import (
 	"time"
 
 	handler "github.com/ReilEgor/FinScale-backend/CurrencyService/internal/transport/rest/handlers"
+	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/transport/rest/middleware"
 	usecase "github.com/ReilEgor/FinScale-backend/CurrencyService/internal/usecase"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
 type GinServer struct {
@@ -18,10 +20,10 @@ type GinServer struct {
 	logger *slog.Logger
 }
 
-func NewGinServer(uc *usecase.CurrencyUseCase) *GinServer {
+func NewGinServer(uc *usecase.CurrencyUseCase, redisClient *redis.Client) *GinServer {
 	router := gin.New()
 	logger := slog.With(slog.String("component", "gin_server"))
-	SetupMiddleware(router, logger)
+	middleware.SetupMiddleware(router, logger, redisClient)
 
 	s := &GinServer{
 		router: router,

@@ -1,17 +1,25 @@
-package rest
+package middleware
 
 import (
 	"context"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
-func SetupMiddleware(router *gin.Engine, logger *slog.Logger) {
+func SetupMiddleware(router *gin.Engine, logger *slog.Logger, redisClient *redis.Client) {
 	router.Use(gin.Recovery())
 	router.Use(slogMiddleware(logger))
 	router.Use(Timeout(5 * time.Second))
+	rateLimiter, err := RateLimit(redisClient)
+	if err != nil {
+		logger.Error("failed to create rate limiter", "error", err)
+		os.Exit(1)
+	}
+	router.Use(rateLimiter)
 }
 
 func slogMiddleware(logger *slog.Logger) gin.HandlerFunc {
