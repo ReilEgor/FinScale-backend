@@ -2,15 +2,17 @@ package middleware
 
 import (
 	"context"
+	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
+	"github.com/zsais/go-gin-prometheus"
 	"log/slog"
 	"os"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 )
 
 func SetupMiddleware(router *gin.Engine, logger *slog.Logger, redisClient *redis.Client) {
+	p := ginprometheus.NewPrometheus("gin")
+	p.Use(router)
 	router.Use(gin.Recovery())
 	router.Use(slogMiddleware(logger))
 	router.Use(Timeout(5 * time.Second))
