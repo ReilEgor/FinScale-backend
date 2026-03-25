@@ -9,19 +9,36 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ConvertCurrencyResponse defines the successful output of a conversion operation.
 type ConvertCurrencyResponse struct {
-	From   string    `json:"from"`
-	To     string    `json:"to"`
-	Amount float64   `json:"amount"`
-	Result float64   `json:"result"`
-	At     time.Time `json:"at"`
-}
-type ConvertCurrencyRequest struct {
-	From   string  `json:"from" binding:"required,alpha"`
-	To     string  `json:"to" binding:"required,alpha"`
-	Amount float64 `json:"amount" binding:"required,gt=0"`
+	From   string    `json:"from" example:"USD"`                // Source currency code (ISO 4217 format).
+	To     string    `json:"to" example:"EUR"`                  // Target currency code (ISO 4217 format).
+	Amount float64   `json:"amount" example:"100.0"`            // Initial value provided by the user for conversion.
+	Result float64   `json:"result" example:"92.5"`             // Calculated value in the target currency based on the latest exchange rate.
+	At     time.Time `json:"at" example:"2026-03-22T15:04:05Z"` // Timestamp when the conversion was processed (UTC).
 }
 
+// ConvertCurrencyRequest defines the input payload for currency conversion.
+type ConvertCurrencyRequest struct {
+	From   string  `json:"from" binding:"required,alpha" example:"USD"`    // Base currency code (ISO 4217)
+	To     string  `json:"to" binding:"required,alpha" example:"EUR"`      // Target currency code (ISO 4217)
+	Amount float64 `json:"amount" binding:"required,gt=0" example:"100.0"` // Amount to convert
+}
+
+// ConvertCurrency calculates the value of one currency in terms of another.
+//
+// @Summary      Convert Currency Amount
+// @Description  Performs a real-time currency conversion using cached rates or external providers (CryptoCompare).
+// @Tags         currency
+// @Accept       json
+// @Produce      json
+// @Param        request  body      ConvertCurrencyRequest  true  "Conversion parameters (from, to, amount)"
+// @Success      200      {object}  ConvertCurrencyResponse "Returns the converted amount and processing timestamp"
+// @Failure      400      {object}  map[string]string       "Validation error: invalid currency codes or negative amount"
+// @Failure      404      {object}  map[string]string       "Rate not found: the requested currency pair is unsupported"
+// @Failure      502      {object}  map[string]string       "Bad Gateway: upstream exchange rate provider failed"
+// @Failure      500      {object}  map[string]string       "Internal Server Error: something went wrong on our end"
+// @Router       /currency/convert [post]
 func (h *Handler) ConvertCurrency(c *gin.Context) {
 	ctx := c.Request.Context()
 	var req ConvertCurrencyRequest

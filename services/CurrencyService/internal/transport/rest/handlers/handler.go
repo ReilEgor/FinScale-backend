@@ -1,11 +1,13 @@
 package handlers
 
 import (
-	"log/slog"
-	"net/http"
-
+	_ "github.com/ReilEgor/FinScale-backend/CurrencyService/api/docs"
 	"github.com/ReilEgor/FinScale-backend/CurrencyService/internal/domain"
 	"github.com/gin-gonic/gin"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
+	"log/slog"
+	"net/http"
 )
 
 type Handler struct {
@@ -24,7 +26,7 @@ func (h *Handler) InitRoutes(router *gin.Engine) {
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
-
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api := router.Group("/api/v1")
 	{
 		currency := api.Group("/currency")

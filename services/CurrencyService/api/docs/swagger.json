@@ -1,0 +1,140 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Microservice for real-time currency conversion and exchange rate tracking.",
+        "title": "FinScale Currency Service API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/currency/convert": {
+            "post": {
+                "description": "Performs a real-time currency conversion using cached rates or external providers (CryptoCompare).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "currency"
+                ],
+                "summary": "Convert Currency Amount",
+                "parameters": [
+                    {
+                        "description": "Conversion parameters (from, to, amount)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_rest_handlers.ConvertCurrencyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the converted amount and processing timestamp",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_rest_handlers.ConvertCurrencyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error: invalid currency codes or negative amount",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Rate not found: the requested currency pair is unsupported",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error: something went wrong on our end",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway: upstream exchange rate provider failed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "internal_transport_rest_handlers.ConvertCurrencyRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "from",
+                "to"
+            ],
+            "properties": {
+                "amount": {
+                    "description": "Amount to convert",
+                    "type": "number",
+                    "example": 100
+                },
+                "from": {
+                    "description": "Base currency code (ISO 4217)",
+                    "type": "string",
+                    "example": "USD"
+                },
+                "to": {
+                    "description": "Target currency code (ISO 4217)",
+                    "type": "string",
+                    "example": "EUR"
+                }
+            }
+        },
+        "internal_transport_rest_handlers.ConvertCurrencyResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Initial value provided by the user for conversion.",
+                    "type": "number",
+                    "example": 100
+                },
+                "at": {
+                    "description": "Timestamp when the conversion was processed (UTC).",
+                    "type": "string",
+                    "example": "2026-03-22T15:04:05Z"
+                },
+                "from": {
+                    "description": "Source currency code (ISO 4217 format).",
+                    "type": "string",
+                    "example": "USD"
+                },
+                "result": {
+                    "description": "Calculated value in the target currency based on the latest exchange rate.",
+                    "type": "number",
+                    "example": 92.5
+                },
+                "to": {
+                    "description": "Target currency code (ISO 4217 format).",
+                    "type": "string",
+                    "example": "EUR"
+                }
+            }
+        }
+    }
+}

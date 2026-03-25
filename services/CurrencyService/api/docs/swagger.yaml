@@ -1,0 +1,100 @@
+basePath: /api/v1
+definitions:
+  internal_transport_rest_handlers.ConvertCurrencyRequest:
+    properties:
+      amount:
+        description: Amount to convert
+        example: 100
+        type: number
+      from:
+        description: Base currency code (ISO 4217)
+        example: USD
+        type: string
+      to:
+        description: Target currency code (ISO 4217)
+        example: EUR
+        type: string
+    required:
+    - amount
+    - from
+    - to
+    type: object
+  internal_transport_rest_handlers.ConvertCurrencyResponse:
+    properties:
+      amount:
+        description: Initial value provided by the user for conversion.
+        example: 100
+        type: number
+      at:
+        description: Timestamp when the conversion was processed (UTC).
+        example: "2026-03-22T15:04:05Z"
+        type: string
+      from:
+        description: Source currency code (ISO 4217 format).
+        example: USD
+        type: string
+      result:
+        description: Calculated value in the target currency based on the latest exchange
+          rate.
+        example: 92.5
+        type: number
+      to:
+        description: Target currency code (ISO 4217 format).
+        example: EUR
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Microservice for real-time currency conversion and exchange rate tracking.
+  title: FinScale Currency Service API
+  version: "1.0"
+paths:
+  /currency/convert:
+    post:
+      consumes:
+      - application/json
+      description: Performs a real-time currency conversion using cached rates or
+        external providers (CryptoCompare).
+      parameters:
+      - description: Conversion parameters (from, to, amount)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_rest_handlers.ConvertCurrencyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the converted amount and processing timestamp
+          schema:
+            $ref: '#/definitions/internal_transport_rest_handlers.ConvertCurrencyResponse'
+        "400":
+          description: 'Validation error: invalid currency codes or negative amount'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: 'Rate not found: the requested currency pair is unsupported'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'Internal Server Error: something went wrong on our end'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "502":
+          description: 'Bad Gateway: upstream exchange rate provider failed'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Convert Currency Amount
+      tags:
+      - currency
+swagger: "2.0"
