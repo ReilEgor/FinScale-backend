@@ -129,6 +129,18 @@ services:
     depends_on:
       auth-validator-service:
         condition: service_started
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "9080:8080"
+    volumes:
+      - ../services/TransactionService/api/docs/swagger.json:/usr/share/nginx/html/docs/transactionService.json
+      - ../services/CurrencyService/api/docs/swagger.json:/usr/share/nginx/html/docs/currencyService.json
+    environment:
+      URLS: "[
+          { url: '/docs/transactionService.json', name: 'Transaction Service' },
+          { url: '/docs/currencyService.json', name: 'Currency Service' }
+        ]"
 networks:
   keycloak-network:
     driver: bridge

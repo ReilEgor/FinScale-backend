@@ -1,0 +1,60 @@
+basePath: /api/v1
+host: localhost:8080
+info:
+  contact: {}
+  description: |-
+    Core ledger service for managing financial records.
+    Handles multi-currency transactions, expense categorization, and secure digital receipt storage via AWS S3.
+  title: FinScale Transaction Service API
+  version: "1.0"
+paths:
+  /transactions:
+    post:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Uploads a receipt image and saves transaction details.
+        The 'data' field must contain a JSON string representing the transaction object.
+      parameters:
+      - description: User ID
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Receipt image file
+        in: formData
+        name: receipt
+        required: true
+        type: file
+      - description: Transaction JSON data (e.g. {\
+        in: formData
+        name: data
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'status: success, receipt_url: string'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'error: invalid data format or missing file'
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 'error: unauthorized'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Record a new transaction with receipt
+      tags:
+      - transactions
+swagger: "2.0"

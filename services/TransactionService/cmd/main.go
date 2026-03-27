@@ -2,15 +2,22 @@ package main
 
 import (
 	"context"
+	_ "github.com/ReilEgor/FinScale-backend/TransactionService/api/docs"
+	"github.com/ReilEgor/FinScale-backend/TransactionService/internal/config"
+	"github.com/caarlos0/env/v11"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/ReilEgor/FinScale-backend/TransactionService/internal/config"
-	"github.com/caarlos0/env/v11"
 )
 
+// Swagger Metadata for API Documentation
+// @title           FinScale Transaction Service API
+// @version         1.0
+// @description     Core ledger service for managing financial records.
+// @description     Handles multi-currency transactions, expense categorization, and secure digital receipt storage via AWS S3.
+// @host      localhost:8080
+// @BasePath  /api/v1
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,

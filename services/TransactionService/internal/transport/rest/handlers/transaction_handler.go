@@ -7,6 +7,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// RecordTransaction godoc
+// @Summary      Record a new transaction with receipt
+// @Description  Uploads a receipt image and saves transaction details.
+// @Description  The 'data' field must contain a JSON string representing the transaction object.
+// @Tags         transactions
+// @Accept       mpfd
+// @Produce      json
+// @Param        X-User-ID  header    string  true  "User ID"
+// @Param        receipt    formData  file    true  "Receipt image file"
+// @Param        data       formData  string  true  "Transaction JSON data (e.g. {\"amount\": 100, \"currency\": \"USD\"})"
+// @Success      201        {object}  map[string]interface{} "status: success, receipt_url: string"
+// @Failure      400        {object}  map[string]interface{} "error: invalid data format or missing file"
+// @Failure      401        {object}  map[string]interface{} "error: unauthorized"
+// @Failure      500        {object}  map[string]interface{} "error: internal server error"
+// @Router       /transactions [post]
 func (h *Handler) RecordTransaction(c *gin.Context) {
 	ctx := c.Request.Context()
 
