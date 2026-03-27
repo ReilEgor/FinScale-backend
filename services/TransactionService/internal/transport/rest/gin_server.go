@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	handler "github.com/ReilEgor/FinScale-backend/TransactionService/internal/transport/rest/handlers"
+	"github.com/ReilEgor/FinScale-backend/TransactionService/internal/transport/rest/middleware"
 	usecase "github.com/ReilEgor/FinScale-backend/TransactionService/internal/usecase"
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +19,7 @@ func NewGinServer(uc *usecase.TransactionUseCase) *GinServer {
 	router := gin.New()
 	logger := slog.With(slog.String("component", "gin_server"))
 
-	SetupMiddleware(router, logger)
+	middleware.SetupMiddleware(router, logger)
 
 	s := &GinServer{
 		router: router,

@@ -1,15 +1,16 @@
-package rest
+package middleware
 
 import (
+	sharedMiddleware "github.com/ReilEgor/FinScale-shared/middleware"
+	"github.com/gin-gonic/gin"
 	"log/slog"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 func SetupMiddleware(router *gin.Engine, logger *slog.Logger) {
 	router.Use(gin.Recovery())
 	router.Use(slogMiddleware(logger))
+	router.Use(sharedMiddleware.AuthMiddleware())
 
 }
 

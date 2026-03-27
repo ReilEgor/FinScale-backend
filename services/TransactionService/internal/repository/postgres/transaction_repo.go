@@ -2,9 +2,11 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/ReilEgor/FinScale-backend/TransactionService/internal/domain"
+	sharedContextUtil "github.com/ReilEgor/FinScale-shared/pkg/contextutil"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -27,24 +29,35 @@ const saveTransactionQuery = `
     RETURNING id;
 `
 
-func (r *TransactionRepository) SaveTransaction(ctx context.Context, transaction domain.Transaction) error {
-	var lastID uuid.UUID
-	err := r.db.QueryRow(ctx, saveTransactionQuery,
-		transaction.UserID,          // $1
-		transaction.Amount,          // $2
-		transaction.Currency,        // $3
-		transaction.Categories,      // $4
-		transaction.Account,         // $5
-		transaction.ReceiptURL,      // $6
-		transaction.TransactionTime, // $7
-	).Scan(&lastID)
-	if err != nil {
-		r.logger.Error("failed to save transaction",
-			slog.Any("error", err),
-			slog.Any("transaction", transaction),
-			slog.Any("last_id", lastID),
-		)
-		return err
+func (r *TransactionRepository) SaveTransaction(ctx context.Context, transaction domain.Transaction) (uuid.UUID, error) {
+	uid, ok := sharedContextUtil.GetUserID(ctx)
+
+	logger := r.logger.With(
+		slog.String("operation", "TransactionRepository.SaveTransaction"),
+		slog.Any("transaction", transaction),
+	)
+	if ok {
+		logger = logger.With(slog.String("user_id", uid))
+	} else {
+		logger.WarnContext(ctx, "unauthorized receipt upload attempt")
+		return uuid.Nil, domain.ErrUnauthorized
 	}
-	return nil
+
+	var id uuid.UUID
+	err := r.db.QueryRow(ctx, saveTransactionQuery,
+		transaction.UserID,
+		transaction.Amount,
+		transaction.Currency,
+		transaction.Categories,
+		transaction.Account,
+		transaction.ReceiptURL,
+		transaction.TransactionTime,
+	).Scan(&id)
+	if err != nil {
+		r.logger.Error(domain.ErrFailedToSaveTransaction.Error(),
+			slog.Any("error", err),
+		)
+		return uuid.Nil, fmt.Errorf("%w: %w", domain.ErrFailedToSaveTransaction, err)
+	}
+	return id, nil
 }

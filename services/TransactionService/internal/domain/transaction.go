@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Transaction struct {
@@ -17,12 +19,12 @@ type Transaction struct {
 }
 
 type TransactionUseCase interface {
-	RecordTransaction(ctx context.Context, transaction Transaction) error
+	RecordTransaction(ctx context.Context, transaction Transaction) (uuid.UUID, error)
 	RecordReceipt(ctx context.Context, openedFile io.Reader, fileName string) (string, error)
 }
 
 type TransactionRepository interface {
-	SaveTransaction(ctx context.Context, transaction Transaction) error
+	SaveTransaction(ctx context.Context, transaction Transaction) (uuid.UUID, error)
 }
 
 type FileStorage interface {

@@ -2,9 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
-
 	"github.com/ReilEgor/FinScale-backend/TransactionService/internal/domain"
+	sharedContextUtil "github.com/ReilEgor/FinScale-shared/pkg/contextutil"
 	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+const (
+	formFieldFile = "receipt"
+	formFieldData = "data"
 )
 
 // RecordTransaction godoc
@@ -25,48 +31,57 @@ import (
 func (h *Handler) RecordTransaction(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	userID := c.GetHeader("X-User-ID")
-	if userID == "" {
-		h.logger.Error("user id is missing in headers")
-		c.JSON(401, gin.H{"error": "unauthorized: user id missing"})
+	userID, ok := sharedContextUtil.UserIDFromContext(ctx)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	file, err := c.FormFile("receipt")
+	file, err := c.FormFile(formFieldFile)
 	if err != nil {
-		h.logger.Error("receipt is required", "error", err)
-		c.JSON(400, gin.H{"error": "receipt file is required"})
+		h.logger.Error("receipt file is required", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "receipt file is required"})
 		return
 	}
 
-	jsonData := c.PostForm("data")
 	var req domain.Transaction
-	if err := json.Unmarshal([]byte(jsonData), &req); err != nil {
-		c.JSON(400, gin.H{"error": "invalid data format"})
+	if err := json.Unmarshal([]byte(c.PostForm(formFieldData)), &req); err != nil {
+		h.logger.Error("invalid transaction data", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid data format"})
 		return
 	}
 
 	fileContent, err := file.Open()
 	if err != nil {
-		c.JSON(500, gin.H{"error": "failed to open receipt file"})
+		h.logger.Error("failed to open receipt file", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to open receipt file"})
 		return
 	}
 	defer fileContent.Close()
 
 	receiptURL, err := h.uc.RecordReceipt(ctx, fileContent, file.Filename)
 	if err != nil {
-		h.logger.Error("upload failed", "error", err)
-		c.JSON(500, gin.H{"error": "failed to upload receipt"})
+		h.logger.Error("failed to upload receipt", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload receipt"})
 		return
 	}
 
-	req.ReceiptURL = receiptURL
 	req.UserID = userID
-	if err := h.uc.RecordTransaction(ctx, req); err != nil {
-		h.logger.Error("db record failed", "error", err)
-		c.JSON(500, gin.H{"error": "failed to record transaction"})
+	req.ReceiptURL = receiptURL
+
+	transactionID, err := h.uc.RecordTransaction(ctx, req)
+	if err != nil {
+		h.logger.Error("failed to record transaction",
+			"user_id", userID,
+			"error", err,
+		)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to record transaction"})
 		return
 	}
 
-	c.JSON(201, gin.H{"status": "success", "receipt_url": receiptURL})
+	c.JSON(http.StatusCreated, gin.H{
+		"status":         "success",
+		"receipt_url":    receiptURL,
+		"transaction_id": transactionID.String(),
+	})
 }
