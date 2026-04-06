@@ -32,6 +32,7 @@ type ConvertCurrencyRequest struct {
 // @Tags         currency
 // @Accept       json
 // @Produce      json
+// @Security     OAuth2AccessCode
 // @Param        request  body      ConvertCurrencyRequest  true  "Conversion parameters (from, to, amount)"
 // @Success      200      {object}  ConvertCurrencyResponse "Returns the converted amount and processing timestamp"
 // @Failure      400      {object}  map[string]string       "Validation error: invalid currency codes or negative amount"

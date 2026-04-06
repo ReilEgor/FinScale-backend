@@ -6,11 +6,16 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "localhost:80",
     "basePath": "/api/v1",
     "paths": {
         "/currency/convert": {
             "post": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": []
+                    }
+                ],
                 "description": "Performs a real-time currency conversion using cached rates or external providers (CryptoCompare).",
                 "consumes": [
                     "application/json"
@@ -135,6 +140,14 @@
                     "example": "EUR"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "OAuth2AccessCode": {
+            "type": "oauth2",
+            "flow": "accessCode",
+            "authorizationUrl": "http://localhost:8081/realms/fin_scale_realm/protocol/openid-connect/auth",
+            "tokenUrl": "http://localhost:8081/realms/fin_scale_realm/protocol/openid-connect/token"
         }
     }
 }

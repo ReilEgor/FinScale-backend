@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/currency/convert": {
             "post": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": []
+                    }
+                ],
                 "description": "Performs a real-time currency conversion using cached rates or external providers (CryptoCompare).",
                 "consumes": [
                     "application/json"
@@ -142,13 +147,21 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "OAuth2AccessCode": {
+            "type": "oauth2",
+            "flow": "accessCode",
+            "authorizationUrl": "http://localhost:8081/realms/fin_scale_realm/protocol/openid-connect/auth",
+            "tokenUrl": "http://localhost:8081/realms/fin_scale_realm/protocol/openid-connect/token"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "localhost:80",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "FinScale Currency Service API",

@@ -43,7 +43,7 @@ definitions:
         example: EUR
         type: string
     type: object
-host: localhost:8080
+host: localhost:80
 info:
   contact: {}
   description: Microservice for real-time currency conversion and exchange rate tracking.
@@ -94,7 +94,15 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - OAuth2AccessCode: []
       summary: Convert Currency Amount
       tags:
       - currency
+securityDefinitions:
+  OAuth2AccessCode:
+    authorizationUrl: http://localhost:8081/realms/fin_scale_realm/protocol/openid-connect/auth
+    flow: accessCode
+    tokenUrl: http://localhost:8081/realms/fin_scale_realm/protocol/openid-connect/token
+    type: oauth2
 swagger: "2.0"

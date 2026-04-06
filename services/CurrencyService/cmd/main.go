@@ -2,21 +2,26 @@ package main
 
 import (
 	"context"
-	_ "github.com/ReilEgor/FinScale-backend/CurrencyService/api/docs"
-	config "github.com/ReilEgor/FinScale-backend/CurrencyService/internal/config"
-	env "github.com/caarlos0/env/v11"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
+
+	_ "github.com/ReilEgor/FinScale-backend/CurrencyService/api/docs"
+	config "github.com/ReilEgor/FinScale-backend/CurrencyService/internal/config"
+	env "github.com/caarlos0/env/v11"
 )
 
 // Swagger Metadata for API Documentation
 // @title           FinScale Currency Service API
 // @version         1.0
 // @description     Microservice for real-time currency conversion and exchange rate tracking.
-// @host      localhost:8080
+// @host      localhost:80
 // @BasePath  /api/v1
+
+// @securityDefinitions.oauth2.accessCode OAuth2AccessCode
+// @tokenUrl http://localhost:8081/realms/fin_scale_realm/protocol/openid-connect/token
+// @authorizationUrl http://localhost:8081/realms/fin_scale_realm/protocol/openid-connect/auth
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
